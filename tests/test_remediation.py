@@ -1,3 +1,5 @@
+import json
+
 from graph.nodes import remediation
 from graph.state import Incident, IncidentState, Remediation, Severity
 
@@ -110,3 +112,95 @@ def test_remediation_continues_after_failure_with_multiple_incidents():
     assert result["errors"][0].node == "remediation"
     assert "inc-001" in result["errors"][0].message
     assert "model timeout" in result["errors"][0].message
+
+
+def test_remediation_overrides_hallucinated_incident_id_and_source():
+    """The LLM never sees incident.id, so the node must not trust its self-report.
+
+    The fake returns a Remediation pointing at a different incident and claiming
+    source="llm" for a category that DOES have a runbook entry. The node must
+    normalize both fields, otherwise the downstream
+    ``{r.incident_id: r}`` joins in ticket.py / cookbook.py silently misattach.
+    """
+
+    class HallucinatingClient:
+        def recommend(self, incident, runbook_entry):
+            return Remediation(
+                incident_id="inc-999-hallucinated",
+                fix_steps=["Restart pod"],
+                rationale="r",
+                risk="low",
+                effort="low",
+                source="llm",
+            )
+
+    state = IncidentState(raw_log="{}", incidents=[_incident("oom")])
+
+    node = remediation.run(HallucinatingClient())
+    result = node(state)
+
+    assert result["remediations"][0].incident_id == "inc-001"
+    assert result["remediations"][0].source == "runbook"
+
+
+def test_remediation_overrides_source_to_llm_for_unknown_category():
+    """Mirror case: no runbook entry, but the LLM claims source="runbook"."""
+
+    class HallucinatingClient:
+        def recommend(self, incident, runbook_entry):
+            return Remediation(
+                incident_id="inc-999-hallucinated",
+                fix_steps=["Investigate"],
+                rationale="r",
+                risk="unknown",
+                effort="unknown",
+                source="runbook",
+            )
+
+    state = IncidentState(raw_log="{}", incidents=[_incident("mystery_category")])
+
+    node = remediation.run(HallucinatingClient())
+    result = node(state)
+
+    assert result["remediations"][0].incident_id == "inc-001"
+    assert result["remediations"][0].source == "llm"
+
+
+def test_load_runbook_returns_empty_dict_on_malformed_json(monkeypatch):
+    monkeypatch.setattr(
+        remediation._RUNBOOK_PATH.__class__, "read_text", lambda self, *a, **k: "{not valid json"
+    )
+
+    assert remediation._load_runbook() == {}
+
+
+def test_load_runbook_returns_empty_dict_when_json_is_not_an_object(monkeypatch):
+    monkeypatch.setattr(
+        remediation._RUNBOOK_PATH.__class__, "read_text", lambda self, *a, **k: json.dumps([1, 2, 3])
+    )
+
+    assert remediation._load_runbook() == {}
+
+
+def test_remediation_node_still_runs_with_corrupt_runbook(monkeypatch):
+    """A corrupt runbook must degrade to source="llm", not crash build_graph()."""
+    monkeypatch.setattr(
+        remediation._RUNBOOK_PATH.__class__, "read_text", lambda self, *a, **k: "{not valid json"
+    )
+
+    class RecordingClient:
+        def recommend(self, incident, runbook_entry):
+            assert runbook_entry is None
+            return Remediation(
+                incident_id=incident.id,
+                fix_steps=["Investigate"],
+                rationale="r",
+                risk="low",
+                effort="low",
+                source="runbook",
+            )
+
+    node = remediation.run(RecordingClient())
+    result = node(IncidentState(raw_log="{}", incidents=[_incident("oom")]))
+
+    assert result["remediations"][0].source == "llm"

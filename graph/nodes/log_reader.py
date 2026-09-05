@@ -53,13 +53,16 @@ def _parse_log(raw_log: str) -> tuple[list[LogEvent], int]:
     events: list[LogEvent] = []
     for record in records:
         try:
+            raw_context = record.get("context")
             events.append(
                 LogEvent(
                     timestamp=str(record.get("timestamp", "")),
                     service=str(record.get("service", "unknown")),
                     level=str(record.get("level", "info")),
                     message=str(record.get("message", "")),
-                    context=record.get("context"),
+                    # Coerced like its siblings so a structured context (dict/list)
+                    # doesn't fail validation and silently drop the whole event.
+                    context=str(raw_context) if raw_context is not None else None,
                 )
             )
         except Exception:  # noqa: BLE001 - malformed record, count and skip

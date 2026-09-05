@@ -1,5 +1,5 @@
 from graph.nodes import cookbook
-from graph.state import Incident, IncidentState, Remediation, Severity, Ticket
+from graph.state import AgentError, Incident, IncidentState, Remediation, Severity, Ticket
 
 
 def test_cookbook_orders_incidents_by_severity_and_includes_fix_steps():
@@ -31,3 +31,32 @@ def test_cookbook_handles_no_incidents():
     result = node(state)
 
     assert "# Incident Cookbook" in result["cookbook"]
+
+
+def test_cookbook_preserves_upstream_errors():
+    state = IncidentState(raw_log="{}", errors=[AgentError(node="remediation", message="earlier failure")])
+
+    result = cookbook.run()(state)
+
+    assert [e.node for e in result["errors"]] == ["remediation"]
+
+
+def test_cookbook_records_error_instead_of_raising(monkeypatch):
+    class _ExplodingSeverity:
+        def __eq__(self, other):
+            raise RuntimeError("severity comparison exploded")
+
+        __hash__ = None
+
+    monkeypatch.setattr(cookbook, "_SEVERITY_ORDER", [_ExplodingSeverity()])
+
+    state = IncidentState(
+        raw_log="{}",
+        incidents=[Incident(id="inc-001", category="oom", severity=Severity.CRITICAL, summary="OOM", source_events=[])],
+    )
+
+    result = cookbook.run()(state)
+
+    assert result["cookbook"] == "# Incident Cookbook\n\n(generation failed)"
+    assert result["errors"][0].node == "cookbook"
+    assert "severity comparison exploded" in result["errors"][0].message

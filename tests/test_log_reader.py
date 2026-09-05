@@ -82,3 +82,38 @@ def test_log_reader_handles_all_invalid_json_log():
     assert len(result["incidents"]) == 0
     assert len(result["errors"]) == 1
     assert "Dropped 3 unparseable log line(s)" in result["errors"][0].message
+
+
+def test_log_reader_coerces_structured_context_instead_of_dropping_event():
+    """A dict-valued `context` used to fail LogEvent validation and drop the event."""
+    raw_log = json.dumps([
+        {
+            "timestamp": "t1",
+            "service": "svc",
+            "level": "ERROR",
+            "message": "boom",
+            "context": {"nested": "object"},
+        },
+    ])
+    client = FakeLLMClient(classify_result=[])
+    state = IncidentState(raw_log=raw_log)
+
+    result = log_reader.run(client)(state)
+
+    assert len(result["parsed_events"]) == 1
+    assert result["parsed_events"][0].context == str({"nested": "object"})
+    assert result["errors"] == []
+
+
+def test_log_reader_preserves_none_context_when_absent_or_null():
+    raw_log = json.dumps([
+        {"timestamp": "t1", "service": "svc", "level": "INFO", "message": "no context key"},
+        {"timestamp": "t2", "service": "svc", "level": "INFO", "message": "null context", "context": None},
+    ])
+    client = FakeLLMClient(classify_result=[])
+    state = IncidentState(raw_log=raw_log)
+
+    result = log_reader.run(client)(state)
+
+    assert [e.context for e in result["parsed_events"]] == [None, None]
+    assert result["errors"] == []

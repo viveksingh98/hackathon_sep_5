@@ -1,5 +1,5 @@
 from graph.nodes import ticket
-from graph.state import Incident, IncidentState, Remediation, Severity
+from graph.state import AgentError, Incident, IncidentState, Remediation, Severity
 
 
 def _incident(id_, severity):
@@ -56,3 +56,30 @@ def test_ticket_handles_critical_incident_with_no_remediation():
 
     assert len(result["tickets"]) == 1
     assert result["tickets"][0].description
+
+
+def test_ticket_preserves_upstream_errors():
+    state = IncidentState(
+        raw_log="{}",
+        incidents=[_incident("inc-001", Severity.CRITICAL)],
+        errors=[AgentError(node="log_reader", message="earlier failure")],
+    )
+
+    result = ticket.run()(state)
+
+    assert [e.node for e in result["errors"]] == ["log_reader"]
+
+
+def test_ticket_records_error_instead_of_raising(monkeypatch):
+    def _boom(**kwargs):
+        raise RuntimeError("ticket construction exploded")
+
+    monkeypatch.setattr(ticket, "Ticket", _boom)
+
+    state = IncidentState(raw_log="{}", incidents=[_incident("inc-001", Severity.CRITICAL)])
+
+    result = ticket.run()(state)
+
+    assert result["tickets"] == []
+    assert result["errors"][0].node == "ticket"
+    assert "ticket construction exploded" in result["errors"][0].message
