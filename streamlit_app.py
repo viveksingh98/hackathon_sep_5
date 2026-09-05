@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 from graph.build import build_graph
 from graph.state import IncidentState
-from integrations.slack import NoOpSlackClient, SlackClient
+from integrations.slack import SlackClient
 from llm.factory import create_client
 
 load_dotenv()
@@ -54,11 +54,8 @@ def _render_node_details(node_name: str, node_output: dict) -> None:
     elif node_name == "notification":
         notification_result = node_output.get("notification_result")
         if notification_result is not None and not notification_result.error:
-            if notification_result.summary_message_id == "slack-skipped":
-                st.markdown("Slack skipped (no bot token / channel configured).")
-            else:
-                st.markdown(f"Summary message id: `{notification_result.summary_message_id}`")
-                st.markdown(f"Thread replies posted: {len(notification_result.thread_reply_ids)}")
+            st.markdown(f"Summary message id: `{notification_result.summary_message_id}`")
+            st.markdown(f"Thread replies posted: {len(notification_result.thread_reply_ids)}")
 
 st.markdown(
     """
@@ -86,9 +83,9 @@ with st.sidebar:
         value=os.getenv(_PROVIDER_KEY_ENV[provider], ""),
     )
     st.divider()
-    slack_bot_token = st.text_input("Slack bot token (optional)", type="password", value=os.getenv("SLACK_BOT_TOKEN", ""))
-    slack_channel_id = st.text_input("Slack channel ID (optional)", value=os.getenv("SLACK_CHANNEL_ID", ""))
-    st.caption("Values are pre-filled from your `.env` when present; edit them here to override. Slack is optional.")
+    slack_bot_token = st.text_input("Slack bot token", type="password", value=os.getenv("SLACK_BOT_TOKEN", ""))
+    slack_channel_id = st.text_input("Slack channel ID", value=os.getenv("SLACK_CHANNEL_ID", ""))
+    st.caption("Values are pre-filled from your `.env` when present; edit them here to override.")
 
 st.subheader("1. Choose a log")
 fixture_names = sorted(p.name for p in _FIXTURES_DIR.glob("*.json"))
@@ -101,16 +98,14 @@ if uploaded_file is not None:
 elif fixture_choice != "(upload my own)":
     raw_log = (_FIXTURES_DIR / fixture_choice).read_text()
 
-slack_configured = bool(slack_bot_token and slack_channel_id)
-run_clicked = st.button("Analyze", disabled=raw_log is None or not api_key)
+run_clicked = st.button(
+    "Analyze",
+    disabled=raw_log is None or not api_key or not slack_bot_token or not slack_channel_id,
+)
 
 if run_clicked and raw_log is not None:
     llm_client = create_client(provider, api_key)
-    slack_client = (
-        SlackClient(bot_token=slack_bot_token, channel_id=slack_channel_id)
-        if slack_configured
-        else NoOpSlackClient()
-    )
+    slack_client = SlackClient(bot_token=slack_bot_token, channel_id=slack_channel_id)
     graph = build_graph(llm_client, slack_client)
 
     st.subheader("2. Live agent trace")
@@ -166,7 +161,5 @@ if run_clicked and raw_log is not None:
         if notification_result is not None:
             if notification_result.error:
                 st.warning(f"Slack notification failed: {notification_result.error}")
-            elif notification_result.summary_message_id == "slack-skipped":
-                st.info("Slack skipped — analysis completed without posting.")
             else:
                 st.success("Slack summary + thread replies posted.")

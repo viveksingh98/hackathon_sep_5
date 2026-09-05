@@ -16,12 +16,11 @@ streamlit run streamlit_app.py
 ```
 
 `streamlit_app.py` loads `.env` on startup, so `OPENROUTER_API_KEY` (preferred for demo),
-`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, and optional `SLACK_BOT_TOKEN` /
-`SLACK_CHANNEL_ID` pre-fill the sidebar fields. Anything you type in the sidebar
-overrides them for that session; nothing is written back to disk.
+`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, `SLACK_BOT_TOKEN`, and `SLACK_CHANNEL_ID`
+pre-fill the sidebar fields. Anything you type in the sidebar overrides them for
+that session; nothing is written back to disk.
 
-Slack is optional — leave those fields blank to run classification, remediation,
-mock tickets, and the cookbook without posting.
+Slack is required for Analyze (bot must be invited to the target channel).
 
 ## Run it (Vercel / FastAPI)
 
@@ -31,7 +30,8 @@ Streamlit needs a persistent server, so Vercel hosting uses a thin FastAPI UI in
 ```bash
 pip install -r requirements.txt
 uvicorn main:app --reload
-# or: vercel --prod   # after login / VERCEL_TOKEN, with OPENROUTER_API_KEY in project env
+# or: vercel --prod
+# Set OPENROUTER_API_KEY, SLACK_BOT_TOKEN, and SLACK_CHANNEL_ID in project env
 ```
 
 ## Test it

@@ -98,7 +98,7 @@
     <div class="hero">
       <div class="eyebrow">v0.1 · hackathon build · Vercel</div>
       <h1>Five agents read your logs. One incident, <span>resolved</span>.</h1>
-      <p>Upload or pick a sample ops log — agents classify, remediate, mock tickets, and optionally post to Slack.</p>
+      <p>Upload or pick a sample ops log — agents classify, remediate, mock tickets, and post the summary to Slack.</p>
     </div>
 
     <form method="post" action="/analyze">
@@ -119,7 +119,7 @@
         OpenRouter API key {% if has_env_key %}(optional — env key is set){% endif %}
         <input type="password" name="api_key" placeholder="sk-or-..." autocomplete="off" />
       </label>
-      <p class="hint">Slack is optional. Leave Slack env vars empty to skip posting.</p>
+      <p class="hint">Slack credentials come from server env (SLACK_BOT_TOKEN + SLACK_CHANNEL_ID).</p>
       <button type="submit">Analyze</button>
     </form>
 

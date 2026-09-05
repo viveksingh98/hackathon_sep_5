@@ -12,7 +12,7 @@ from jinja2 import Template
 
 from graph.build import build_graph
 from graph.state import IncidentState
-from integrations.slack import NoOpSlackClient, SlackClient
+from integrations.slack import SlackClient
 from llm.factory import create_client
 from web_assets import FIXTURES, INDEX_HTML
 
@@ -92,11 +92,9 @@ def _run_analysis(raw_log: str, api_key: str, provider: str = "openrouter") -> d
     llm_client = create_client(provider, api_key)
     slack_token = os.getenv("SLACK_BOT_TOKEN", "").strip()
     slack_channel = os.getenv("SLACK_CHANNEL_ID", "").strip()
-    slack_client = (
-        SlackClient(bot_token=slack_token, channel_id=slack_channel)
-        if slack_token and slack_channel
-        else NoOpSlackClient()
-    )
+    if not slack_token or not slack_channel:
+        raise ValueError("SLACK_BOT_TOKEN and SLACK_CHANNEL_ID are required.")
+    slack_client = SlackClient(bot_token=slack_token, channel_id=slack_channel)
     graph = build_graph(llm_client, slack_client)
     final_state: dict = {"errors": []}
     for chunk in graph.stream(IncidentState(raw_log=raw_log), stream_mode="updates"):
