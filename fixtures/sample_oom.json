@@ -1,0 +1,6 @@
+[
+  {"timestamp": "2026-09-05T02:14:01Z", "service": "checkout-api", "level": "INFO", "message": "Request received POST /checkout"},
+  {"timestamp": "2026-09-05T02:14:03Z", "service": "checkout-api", "level": "WARN", "message": "Memory usage at 92% of container limit"},
+  {"timestamp": "2026-09-05T02:14:05Z", "service": "checkout-api", "level": "ERROR", "message": "java.lang.OutOfMemoryError: Java heap space", "context": "at com.example.checkout.OrderProcessor.process(OrderProcessor.java:142)"},
+  {"timestamp": "2026-09-05T02:14:06Z", "service": "checkout-api", "level": "FATAL", "message": "Container killed: OOMKilled (exit code 137)"}
+]

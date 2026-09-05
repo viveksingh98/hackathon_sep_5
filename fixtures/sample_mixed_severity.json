@@ -1,0 +1,9 @@
+[
+  {"timestamp": "2026-09-05T04:00:00Z", "service": "web-frontend", "level": "INFO", "message": "Deploy v1.42.0 completed successfully"},
+  {"timestamp": "2026-09-05T04:05:12Z", "service": "checkout-api", "level": "WARN", "message": "Memory usage at 92% of container limit"},
+  {"timestamp": "2026-09-05T04:05:14Z", "service": "checkout-api", "level": "ERROR", "message": "java.lang.OutOfMemoryError: Java heap space", "context": "at com.example.checkout.OrderProcessor.process(OrderProcessor.java:142)"},
+  {"timestamp": "2026-09-05T04:05:15Z", "service": "checkout-api", "level": "FATAL", "message": "Container killed: OOMKilled (exit code 137)"},
+  {"timestamp": "2026-09-05T04:10:02Z", "service": "orders-worker", "level": "WARN", "message": "Database query exceeded 5000ms, retrying"},
+  {"timestamp": "2026-09-05T04:10:32Z", "service": "orders-worker", "level": "ERROR", "message": "psycopg2.OperationalError: connection timeout after 30s", "context": "connection pool exhausted (max_connections=20)"},
+  {"timestamp": "2026-09-05T04:15:00Z", "service": "web-frontend", "level": "INFO", "message": "Health check passed"}
+]

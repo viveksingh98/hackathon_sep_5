@@ -1,0 +1,5 @@
+[
+  {"timestamp": "2026-09-05T03:02:11Z", "service": "orders-worker", "level": "INFO", "message": "Processing batch of 200 orders"},
+  {"timestamp": "2026-09-05T03:02:41Z", "service": "orders-worker", "level": "WARN", "message": "Database query exceeded 5000ms, retrying"},
+  {"timestamp": "2026-09-05T03:03:11Z", "service": "orders-worker", "level": "ERROR", "message": "psycopg2.OperationalError: connection timeout after 30s", "context": "connection pool exhausted (max_connections=20)"}
+]
