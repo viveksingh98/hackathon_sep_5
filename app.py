@@ -28,7 +28,34 @@ _AGENT_NAMES = {
     "cookbook": "Cookbook Agent",
     "notification": "Notification Agent",
 }
-_PROVIDER_KEY_ENV = {"anthropic": "ANTHROPIC_API_KEY", "openai": "OPENAI_API_KEY"}
+_PROVIDER_KEY_ENV = {
+    "openrouter": "OPENROUTER_API_KEY",
+    "anthropic": "ANTHROPIC_API_KEY",
+    "openai": "OPENAI_API_KEY",
+}
+
+
+def _render_node_details(node_name: str, node_output: dict) -> None:
+    if node_name == "log_reader":
+        for incident in node_output.get("incidents", []):
+            st.markdown(f"**{incident.id}** · {incident.category} · {incident.severity.value} — {incident.summary}")
+    elif node_name == "remediation":
+        for remediation in node_output.get("remediations", []):
+            st.markdown(f"**{remediation.incident_id}** ({remediation.source}, risk: {remediation.risk}, effort: {remediation.effort})")
+            for step in remediation.fix_steps:
+                st.markdown(f"- {step}")
+    elif node_name == "ticket":
+        for ticket in node_output.get("tickets", []):
+            st.markdown(f"[{ticket.ticket_id}]({ticket.url}) — {ticket.summary}")
+    elif node_name == "cookbook":
+        cookbook_text = node_output.get("cookbook", "")
+        if cookbook_text:
+            st.markdown(cookbook_text)
+    elif node_name == "notification":
+        notification_result = node_output.get("notification_result")
+        if notification_result is not None and not notification_result.error:
+            st.markdown(f"Summary message id: `{notification_result.summary_message_id}`")
+            st.markdown(f"Thread replies posted: {len(notification_result.thread_reply_ids)}")
 
 st.markdown(
     """
@@ -45,11 +72,13 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+_PROVIDER_LABELS = {"openrouter": "OpenRouter", "anthropic": "Anthropic", "openai": "OpenAI"}
+
 with st.sidebar:
     st.header("Configuration")
-    provider = st.selectbox("LLM provider", ["anthropic", "openai"])
+    provider = st.selectbox("LLM provider", ["openrouter", "anthropic", "openai"])
     api_key = st.text_input(
-        f"{provider.title()} API key",
+        f"{_PROVIDER_LABELS[provider]} API key",
         type="password",
         value=os.getenv(_PROVIDER_KEY_ENV[provider], ""),
     )
@@ -96,7 +125,10 @@ if run_clicked and raw_log is not None:
                 node_failed = True
 
             with trace:
-                st.status(label, state="error" if node_failed else "complete")
+                with st.status(label, state="error" if node_failed else "complete"):
+                    _render_node_details(node_name, node_output)
+                    for err in node_output.get("errors", [])[errors_before:]:
+                        st.warning(err.message)
                 if node_name in node_order:
                     next_index = node_order.index(node_name) + 1
                     if next_index < len(node_order):

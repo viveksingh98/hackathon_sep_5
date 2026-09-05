@@ -1,0 +1,22 @@
+[
+  {"timestamp": "2026-09-05T02:58:00Z", "service": "web-frontend", "level": "INFO", "message": "Deploy v2.7.3 completed successfully"},
+  {"timestamp": "2026-09-05T03:00:11Z", "service": "auth-service", "level": "WARN", "message": "Elevated login failure rate: 47 failed attempts in 60s for user admin@example.com", "context": "source_ips=[203.0.113.9, 203.0.113.14, 198.51.100.22]"},
+  {"timestamp": "2026-09-05T03:00:42Z", "service": "auth-service", "level": "ERROR", "message": "Possible credential stuffing attack detected", "context": "rule=brute_force_login threshold_exceeded=true blocked=false"},
+  {"timestamp": "2026-09-05T03:02:11Z", "service": "orders-worker", "level": "INFO", "message": "Processing batch of 200 orders"},
+  {"timestamp": "2026-09-05T03:02:41Z", "service": "orders-worker", "level": "WARN", "message": "Database query exceeded 5000ms, retrying"},
+  {"timestamp": "2026-09-05T03:03:11Z", "service": "orders-worker", "level": "ERROR", "message": "psycopg2.OperationalError: connection timeout after 30s", "context": "connection pool exhausted (max_connections=20)"},
+  {"timestamp": "2026-09-05T03:04:02Z", "service": "orders-worker", "level": "FATAL", "message": "Worker process exiting after 3 consecutive DB connection failures", "context": "restart_count=3"},
+  {"timestamp": "2026-09-05T03:10:05Z", "service": "checkout-api", "level": "WARN", "message": "Memory usage at 92% of container limit"},
+  {"timestamp": "2026-09-05T03:10:07Z", "service": "checkout-api", "level": "ERROR", "message": "java.lang.OutOfMemoryError: Java heap space", "context": "at com.example.checkout.OrderProcessor.process(OrderProcessor.java:142)"},
+  {"timestamp": "2026-09-05T03:10:08Z", "service": "checkout-api", "level": "FATAL", "message": "Container killed: OOMKilled (exit code 137)", "context": "pod=checkout-api-7d4f9b6c8-xk2lp node=ip-10-0-3-21"},
+  {"timestamp": "2026-09-05T03:15:00Z", "service": "payments-gateway", "level": "ERROR", "message": "TLS handshake failed: certificate has expired", "context": "cert_cn=api.payments.internal expired_at=2026-09-04T23:59:59Z"},
+  {"timestamp": "2026-09-05T03:15:02Z", "service": "payments-gateway", "level": "FATAL", "message": "All outbound payment requests failing: upstream certificate invalid", "context": "impact=payment_processing_down affected_requests=1834"},
+  {"timestamp": "2026-09-05T03:20:00Z", "service": "storage-node-3", "level": "WARN", "message": "Disk usage at 88% on /var/lib/data"},
+  {"timestamp": "2026-09-05T03:25:00Z", "service": "storage-node-3", "level": "WARN", "message": "Disk usage at 95% on /var/lib/data"},
+  {"timestamp": "2026-09-05T03:26:10Z", "service": "storage-node-3", "level": "ERROR", "message": "Write failed: No space left on device", "context": "path=/var/lib/data/wal/0001234.log"},
+  {"timestamp": "2026-09-05T03:30:00Z", "service": "api-gateway", "level": "WARN", "message": "p99 latency for /v1/checkout increased to 4200ms (baseline 300ms)"},
+  {"timestamp": "2026-09-05T03:31:15Z", "service": "api-gateway", "level": "ERROR", "message": "Upstream timeout calling checkout-api", "context": "timeout_ms=5000 retries=2"},
+  {"timestamp": "2026-09-05T03:40:00Z", "service": "notification-service", "level": "INFO", "message": "Health check passed"},
+  {"timestamp": "2026-09-05T03:42:00Z", "service": "ci-cd-pipeline", "level": "ERROR", "message": "Deployment rollback triggered for checkout-api", "context": "reason=crash_loop_backoff previous_version=v2.7.2"},
+  {"timestamp": "2026-09-05T03:45:00Z", "service": "web-frontend", "level": "INFO", "message": "Health check passed"}
+]
