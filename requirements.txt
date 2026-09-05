@@ -6,3 +6,7 @@ pydantic
 requests
 python-dotenv
 pytest
+fastapi
+jinja2
+python-multipart
+uvicorn

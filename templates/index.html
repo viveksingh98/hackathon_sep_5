@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DevOps Incident Analysis Suite</title>
+  <style>
+    :root {
+      --bg: #0e1116;
+      --panel: #161b22;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #ff6b4a;
+      --border: #30363d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: radial-gradient(1200px 600px at 10% -10%, #2a1510 0%, var(--bg) 55%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    main { max-width: 920px; margin: 0 auto; padding: 32px 20px 64px; }
+    .hero {
+      background: #07080a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 24px;
+      margin-bottom: 24px;
+    }
+    .hero .eyebrow { color: var(--muted); font-size: 12px; letter-spacing: .2px; }
+    .hero h1 { margin: 8px 0 0; font-size: 28px; font-weight: 600; }
+    .hero h1 span {
+      background: linear-gradient(90deg, #ffb347, #ff6b4a, #ff2f3a);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p { color: #b6b6b8; margin: 10px 0 0; }
+    form {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+    label { display: grid; gap: 6px; font-size: 14px; color: var(--muted); }
+    select, textarea, input, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #0d1117;
+      color: var(--text);
+      padding: 10px 12px;
+    }
+    textarea { min-height: 140px; resize: vertical; }
+    button {
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      justify-self: start;
+    }
+    button:hover { filter: brightness(1.05); }
+    .hint { font-size: 12px; color: var(--muted); }
+    .error {
+      margin-top: 20px;
+      padding: 12px 14px;
+      border-radius: 8px;
+      background: #3d1214;
+      border: 1px solid #8b2e34;
+    }
+    .result { margin-top: 24px; display: grid; gap: 16px; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    section h2 { margin: 0 0 10px; font-size: 16px; }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 6px 0; }
+    pre {
+      white-space: pre-wrap;
+      background: #0d1117;
+      border-radius: 8px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="hero">
+      <div class="eyebrow">v0.1 · hackathon build · Vercel</div>
+      <h1>Five agents read your logs. One incident, <span>resolved</span>.</h1>
+      <p>Upload or pick a sample ops log — agents classify, remediate, mock tickets, and optionally post to Slack.</p>
+    </div>
+
+    <form method="post" action="/analyze">
+      <label>
+        Sample log
+        <select name="fixture">
+          <option value="(upload my own)">Paste JSON below</option>
+          {% for name in fixtures %}
+          <option value="{{ name }}" {% if selected_fixture == name %}selected{% endif %}>{{ name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>
+        Or paste JSON log
+        <textarea name="raw_log" placeholder='[{"timestamp":"...","service":"...","level":"ERROR","message":"..."}]'></textarea>
+      </label>
+      <label>
+        OpenRouter API key {% if has_env_key %}(optional — env key is set){% endif %}
+        <input type="password" name="api_key" placeholder="sk-or-..." autocomplete="off" />
+      </label>
+      <p class="hint">Slack is optional. Leave Slack env vars empty to skip posting.</p>
+      <button type="submit">Analyze</button>
+    </form>
+
+    {% if error %}
+    <div class="error">{{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+    <div class="result">
+      <section>
+        <h2>Incidents</h2>
+        <ul>
+          {% for i in result.incidents %}
+          <li><strong>{{ i.id }}</strong> · {{ i.category }} · {{ i.severity }} — {{ i.summary }}</li>
+          {% else %}
+          <li>No incidents detected.</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h2>Remediations</h2>
+        {% for r in result.remediations %}
+        <p><strong>{{ r.incident_id }}</strong> ({{ r.source }}, risk: {{ r.risk }}, effort: {{ r.effort }})</p>
+        <ul>{% for step in r.fix_steps %}<li>{{ step }}</li>{% endfor %}</ul>
+        {% else %}
+        <p class="hint">None</p>
+        {% endfor %}
+      </section>
+      <section>
+        <h2>Mock tickets</h2>
+        <ul>
+          {% for t in result.tickets %}
+          <li><a href="{{ t.url }}">{{ t.ticket_id }}</a> — {{ t.summary }}</li>
+          {% else %}
+          <li>No critical tickets.</li>
+          {% endfor %}
+        </ul>
+      </section>
+      <section>
+        <h2>Cookbook</h2>
+        <pre>{{ result.cookbook }}</pre>
+      </section>
+      {% if result.errors %}
+      <section>
+        <h2>Errors</h2>
+        <ul>{% for e in result.errors %}<li>{{ e.node }}: {{ e.message }}</li>{% endfor %}</ul>
+      </section>
+      {% endif %}
+      {% if result.notification_result %}
+      <section>
+        <h2>Slack</h2>
+        {% if result.notification_result.summary_message_id == "slack-skipped" %}
+        <p class="hint">Slack skipped — analysis completed without posting.</p>
+        {% elif result.notification_result.error %}
+        <p class="error">{{ result.notification_result.error }}</p>
+        {% else %}
+        <p>Posted. Summary id: {{ result.notification_result.summary_message_id }}</p>
+        {% endif %}
+      </section>
+      {% endif %}
+    </div>
+    {% endif %}
+  </main>
+</body>
+</html>

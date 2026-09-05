@@ -7,7 +7,7 @@ the result to Slack — live, traceable, in one pass.
 See [docs/requirements.md](docs/requirements.md), [docs/architecture.md](docs/architecture.md),
 and [docs/technical-specification.md](docs/technical-specification.md) for the full design.
 
-## Run it
+## Run it (local Streamlit)
 
 ```bash
 pip install -r requirements.txt
@@ -23,8 +23,16 @@ overrides them for that session; nothing is written back to disk.
 Slack is optional — leave those fields blank to run classification, remediation,
 mock tickets, and the cookbook without posting.
 
-For a hosted demo, use a Streamlit-compatible host (e.g. Streamlit Community
-Cloud, Render, or Railway). Vercel does not run Streamlit as-is.
+## Run it (Vercel / FastAPI)
+
+Streamlit needs a persistent server, so Vercel hosting uses a thin FastAPI UI in
+`main.py` that calls the same LangGraph agents.
+
+```bash
+pip install -r requirements.txt
+uvicorn main:app --reload
+# or: vercel --prod   # after `vercel login`, set OPENROUTER_API_KEY in project env
+```
 
 ## Test it
 

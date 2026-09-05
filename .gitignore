@@ -9,8 +9,13 @@ venv/
 # Secrets
 .env
 
+# Node / Vercel CLI (local only)
+node_modules/
+package-lock.json
+
 # Regenerable design-canvas build output (source is design/*.dc.html + canvas.json)
 design/devops-incident-suite-landing-hero.html
 
 # Subagent-driven-development scratch workspace
 .superpowers/
+.vercel

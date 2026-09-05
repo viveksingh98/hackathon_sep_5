@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules
+package.json
+package-lock.json
+.venv
+venv
+__pycache__
+.pytest_cache
+.git
+.claude
+design
+docs
+tests
