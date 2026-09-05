@@ -1,0 +1,386 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    a { color: #9c9c9d; text-decoration: none; }
+    a:hover { color: #e9e9ea; }
+
+    .hero {
+      position: relative;
+      width: 1440px;
+      height: 1000px;
+      background: #07080a;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #ffffff;
+    }
+
+    .blade {
+      position: absolute;
+      filter: blur(80px);
+      mix-blend-mode: screen;
+      will-change: transform, opacity;
+    }
+    .blade-a {
+      top: -140px; left: -180px; width: 920px; height: 300px;
+      background: linear-gradient(90deg, rgba(255,47,58,0) 0%, rgba(255,47,58,.92) 24%, rgba(255,107,74,.68) 52%, rgba(255,179,71,.38) 78%, rgba(255,179,71,0) 100%);
+      transform: rotate(-27deg);
+      animation: bladeA 19s ease-in-out infinite;
+      animation-delay: -4s;
+    }
+    .blade-b {
+      top: 90px; right: -260px; width: 860px; height: 270px;
+      background: linear-gradient(90deg, rgba(255,179,71,0) 0%, rgba(255,179,71,.42) 24%, rgba(255,107,74,.72) 55%, rgba(255,47,58,.86) 82%, rgba(255,47,58,0) 100%);
+      transform: rotate(19deg);
+      animation: bladeB 22s ease-in-out infinite;
+      animation-delay: -9s;
+    }
+    .blade-c {
+      top: 470px; left: 160px; width: 780px; height: 230px;
+      background: linear-gradient(90deg, rgba(255,47,58,0) 0%, rgba(255,47,58,.7) 26%, rgba(255,107,74,.6) 54%, rgba(255,179,71,.5) 80%, rgba(255,179,71,0) 100%);
+      transform: rotate(-13deg);
+      animation: bladeC 16s ease-in-out infinite;
+      animation-delay: -2s;
+    }
+    .blade-d {
+      bottom: -190px; right: 60px; width: 880px; height: 270px;
+      background: linear-gradient(90deg, rgba(255,107,74,0) 0%, rgba(255,107,74,.55) 22%, rgba(255,47,58,.82) 52%, rgba(255,179,71,.4) 80%, rgba(255,179,71,0) 100%);
+      transform: rotate(31deg);
+      animation: bladeD 20s ease-in-out infinite;
+      animation-delay: -11s;
+    }
+    @keyframes bladeA {
+      0%   { transform: translate(0,0) rotate(-27deg) scale(1); opacity: 1; }
+      50%  { transform: translate(52px,32px) rotate(-23deg) scale(1.06); opacity: .78; }
+      100% { transform: translate(0,0) rotate(-27deg) scale(1); opacity: 1; }
+    }
+    @keyframes bladeB {
+      0%   { transform: translate(0,0) rotate(19deg) scale(1); opacity: 1; }
+      50%  { transform: translate(-42px,26px) rotate(23deg) scale(1.05); opacity: .72; }
+      100% { transform: translate(0,0) rotate(19deg) scale(1); opacity: 1; }
+    }
+    @keyframes bladeC {
+      0%   { transform: translate(0,0) rotate(-13deg) scale(1); opacity: 1; }
+      50%  { transform: translate(36px,-22px) rotate(-17deg) scale(1.08); opacity: .76; }
+      100% { transform: translate(0,0) rotate(-13deg) scale(1); opacity: 1; }
+    }
+    @keyframes bladeD {
+      0%   { transform: translate(0,0) rotate(31deg) scale(1); opacity: 1; }
+      50%  { transform: translate(-32px,-24px) rotate(27deg) scale(1.05); opacity: .74; }
+      100% { transform: translate(0,0) rotate(31deg) scale(1); opacity: 1; }
+    }
+
+    .grain { position: absolute; inset: 0; opacity: .05; mix-blend-mode: overlay; pointer-events: none; z-index: 2; }
+    .vignette {
+      position: absolute; inset: 0; pointer-events: none; z-index: 2;
+      background: radial-gradient(ellipse at 50% 38%, rgba(7,8,10,0) 32%, rgba(7,8,10,.55) 74%, rgba(7,8,10,.94) 100%);
+    }
+
+    .content { position: relative; z-index: 3; width: 100%; height: 100%; }
+
+    .nav {
+      position: absolute; top: 28px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 34px;
+      background: rgba(20,20,23,.55);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 999px;
+      padding: 10px 12px 10px 20px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 9px; }
+    .nav-word { font-size: 14px; font-weight: 600; color: #ffffff; letter-spacing: -.1px; }
+    .nav-links { display: flex; align-items: center; gap: 26px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: #9c9c9d; }
+    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-right a { font-size: 14px; font-weight: 500; color: #9c9c9d; }
+    .nav-cta {
+      display: flex; align-items: center; gap: 6px;
+      background: #ececed; color: #171717; font-size: 13px; font-weight: 600;
+      padding: 8px 16px; border-radius: 999px;
+    }
+
+    .eyebrow {
+      position: absolute; top: 148px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.055);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 999px;
+      padding: 6px 16px 6px 12px;
+      color: #d3d3d4; font-size: 12.5px; font-weight: 500;
+      white-space: nowrap;
+    }
+    .eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg,#ffb347,#ff2f3a); flex: none; }
+
+    .headline {
+      position: absolute; top: 196px; left: 50%; transform: translateX(-50%);
+      width: 800px; text-align: center;
+      font-size: 64px !important; font-weight: 600; line-height: 1.1;
+      color: #ffffff; letter-spacing: -1.2px;
+      text-wrap: pretty;
+    }
+    .headline .accent {
+      background: linear-gradient(90deg, #ffb347, #ff6b4a, #ff2f3a);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    .subtitle {
+      position: absolute; top: 360px; left: 50%; transform: translateX(-50%);
+      width: 640px; text-align: center;
+      font-size: 18px; font-weight: 400; line-height: 1.55; letter-spacing: .2px;
+      color: #b6b6b8;
+    }
+
+    .cta-row {
+      position: absolute; top: 452px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 14px;
+    }
+    .keycap {
+      display: flex; align-items: center; gap: 9px;
+      background: #e6e6e6; color: #2f3031;
+      font-size: 14px; font-weight: 500;
+      padding: 12px 20px; border-radius: 8px;
+      box-shadow:
+        0 0 0 2px rgba(0,0,0,.5),
+        0 0 14px rgba(255,255,255,.19),
+        inset 0 1px 0 rgba(255,255,255,.9),
+        inset 0 -1px 0 rgba(0,0,0,.32);
+      white-space: nowrap;
+    }
+
+    .install-caption {
+      position: absolute; top: 508px; left: 50%; transform: translateX(-50%);
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, 'JetBrains Mono', monospace;
+      font-size: 12px; color: #8f8f91; letter-spacing: .1px;
+      white-space: nowrap;
+    }
+    .install-caption .sep { margin: 0 8px; color: #55555a; }
+
+    .cmdbar {
+      position: absolute; top: 566px; left: 50%; transform: translateX(-50%);
+      width: 760px;
+      background: rgba(17,17,19,.58);
+      backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 14px;
+      box-shadow: 0 40px 80px -30px rgba(255,60,42,.28), 0 0 0 1px rgba(0,0,0,.4);
+      overflow: hidden;
+    }
+    .cmdbar-input {
+      display: flex; align-items: center; gap: 12px;
+      padding: 18px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .cmdbar-query { flex: 1; display: flex; align-items: center; font-size: 15px; color: #ececed; }
+    .caret { width: 2px; height: 17px; background: #ffb347; margin-left: 2px; animation: caretBlink 1.1s steps(1) infinite; }
+    @keyframes caretBlink { 0%, 45% { opacity: 1; } 50%, 95% { opacity: 0; } 100% { opacity: 1; } }
+    .mode-pill {
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+      font-size: 11px; font-weight: 500; color: #c7c7c8;
+      background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 6px; padding: 4px 9px;
+    }
+    .cmdbar-rows { padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+    .cmdbar-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 12px; border-radius: 8px;
+    }
+    .cmdbar-row.active { background: linear-gradient(90deg, rgba(255,47,58,.16), rgba(255,107,74,.05) 70%); }
+    .row-left { display: flex; align-items: center; gap: 12px; }
+    .row-icon {
+      width: 30px; height: 30px; border-radius: 7px;
+      background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.07);
+      display: flex; align-items: center; justify-content: center; flex: none;
+      color: #d6d6d7;
+    }
+    .row-label { font-size: 14px; color: #ececed; font-weight: 500; }
+    .row-arg {
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+      font-size: 12.5px; color: #8f8f91; margin-left: 9px;
+    }
+    .shortcut {
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+      font-size: 11.5px; color: #9c9c9d;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 6px; padding: 4px 8px;
+    }
+    .cmdbar-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; border-top: 1px solid rgba(255,255,255,.07);
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, monospace;
+      font-size: 11px; color: #78787b;
+    }
+
+    .ghost-pill {
+      position: absolute; top: 906px; left: 50%; transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: transparent; color: #c7c7c8; font-size: 14px; font-weight: 500;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 999px; padding: 10px 20px;
+    }
+
+    .badge {
+      position: absolute; bottom: 30px; right: 30px;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(15,15,17,.75);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 11px; padding: 10px 14px;
+      box-shadow: 0 18px 40px -18px rgba(0,0,0,.6);
+    }
+    .badge-mark {
+      width: 26px; height: 26px; border-radius: 7px; flex: none;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+      display: flex; align-items: center; justify-content: center; color: #ffb347;
+    }
+    .badge-text { display: flex; flex-direction: column; gap: 1px; }
+    .badge-label { font-size: 9.5px; color: #85858a; letter-spacing: .3px; text-transform: uppercase; }
+    .badge-value { font-size: 12.5px; color: #ececed; font-weight: 600; }
+  </style>
+</helmet>
+
+<div class="hero">
+  <div class="blade blade-a"></div>
+  <div class="blade blade-b"></div>
+  <div class="blade blade-c"></div>
+  <div class="blade blade-d"></div>
+
+  <svg class="grain" width="100%" height="100%">
+    <filter id="grainFilter">
+      <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch" result="noise"></feTurbulence>
+      <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.6 0"></feColorMatrix>
+    </filter>
+    <rect width="100%" height="100%" filter="url(#grainFilter)"></rect>
+  </svg>
+  <div class="vignette"></div>
+
+  <div class="content">
+    <nav class="nav">
+      <div class="nav-brand">
+        <svg width="16" height="16" viewBox="0 0 16 16">
+          <defs>
+            <linearGradient id="logoGrad1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#ffb347"></stop>
+              <stop offset="100%" stop-color="#ff2f3a"></stop>
+            </linearGradient>
+          </defs>
+          <rect x="3" y="3" width="10" height="10" rx="2" transform="rotate(45 8 8)" fill="url(#logoGrad1)"></rect>
+        </svg>
+        <span class="nav-word">devops_hackathon_group8</span>
+      </div>
+      <div class="nav-links">
+        <a href="#product">Product</a>
+        <a href="#how">How it works</a>
+        <a href="#agents">Agents</a>
+        <a href="#docs">Docs</a>
+      </div>
+      <div class="nav-right">
+        <a href="#source">GitHub</a>
+        <div class="nav-cta">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Try Demo
+        </div>
+      </div>
+    </nav>
+
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      v0.1 &middot; hackathon build &mdash; multi-agent incident triage
+    </div>
+
+    <h1 class="headline">Five agents read your logs.<br>One incident, <span class="accent">resolved</span>.</h1>
+
+    <p class="subtitle">Upload an ops log and watch five LangGraph agents classify every issue, propose a fix, open a ticket, and post the summary to Slack &mdash; live, in one pass.</p>
+
+    <div class="cta-row">
+      <div class="keycap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        Try the Live Demo
+      </div>
+      <div class="keycap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.4"></circle><circle cx="6" cy="18" r="2.4"></circle><circle cx="18" cy="12" r="2.4"></circle><path d="M6 8.4V15.6"></path><path d="M8.2 6.9L15.8 11"></path><path d="M8.2 17.1L15.8 13"></path></svg>
+        View on GitHub
+      </div>
+    </div>
+
+    <div class="install-caption">git clone &amp;&amp; streamlit run app.py<span class="sep">&middot;</span>or docker compose up</div>
+
+    <div class="cmdbar">
+      <div class="cmdbar-input">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9c9c9d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg>
+        <div class="cmdbar-query">triage payment-service.log<span class="caret"></span></div>
+        <div class="mode-pill">Command</div>
+      </div>
+      <div class="cmdbar-rows">
+        <div class="cmdbar-row active">
+          <div class="row-left">
+            <div class="row-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v5h5"></path><path d="M6 3h8l5 5v13H6z"></path><path d="M9 13h6"></path><path d="M9 17h6"></path></svg>
+            </div>
+            <span class="row-label">Classify incidents</span>
+            <span class="row-arg">payment-service.log</span>
+          </div>
+          <div class="shortcut">&#8984; Enter</div>
+        </div>
+        <div class="cmdbar-row">
+          <div class="row-left">
+            <div class="row-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 01-5.4 5.4L4 17v3h3l5.3-5.3a4 4 0 015.4-5.4z"></path></svg>
+            </div>
+            <span class="row-label">Propose remediation</span>
+            <span class="row-arg">db-timeout</span>
+          </div>
+          <div class="shortcut">&#8984; R</div>
+        </div>
+        <div class="cmdbar-row">
+          <div class="row-left">
+            <div class="row-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2a2 2 0 000-4z"></path></svg>
+            </div>
+            <span class="row-label">Create ticket &middot; mock</span>
+            <span class="row-arg">MOCK-1042</span>
+          </div>
+          <div class="shortcut">&#8984; T</div>
+        </div>
+        <div class="cmdbar-row">
+          <div class="row-left">
+            <div class="row-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 01-3.4 0"></path></svg>
+            </div>
+            <span class="row-label">Post to Slack</span>
+            <span class="row-arg">#incidents</span>
+          </div>
+          <div class="shortcut">&#8984; K</div>
+        </div>
+      </div>
+      <div class="cmdbar-footer">
+        <span>&uarr;&darr; navigate &middot; &#9166; open &middot; esc dismiss</span>
+        <span>devops_hackathon_group8</span>
+      </div>
+    </div>
+
+    <div class="ghost-pill">See how it works &rarr;</div>
+
+    <div class="badge">
+      <div class="badge-mark">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h7l-1 8 11-14h-8l1-6z"></path></svg>
+      </div>
+      <div class="badge-text">
+        <span class="badge-label">Powered by</span>
+        <span class="badge-value">LangGraph + Claude</span>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>
