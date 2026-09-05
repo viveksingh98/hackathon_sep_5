@@ -1,0 +1,8 @@
+streamlit
+langgraph
+langchain-anthropic
+langchain-openai
+pydantic
+requests
+python-dotenv
+pytest
