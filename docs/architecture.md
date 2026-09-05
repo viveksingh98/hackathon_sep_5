@@ -161,17 +161,19 @@ The Streamlit script calls `graph.stream(initial_state, stream_mode=["updates", 
 |---|---|
 | Language | Python |
 | Agent orchestration | LangGraph (`StateGraph`) |
-| UI | Streamlit |
-| LLM SDKs | `langchain-anthropic`, `langchain-openai` (behind the `LLMClient` interface) |
-| Slack integration | Incoming Webhook via `requests`, or `slack_sdk` if using a bot token |
+| UI | Streamlit (local) + FastAPI HTML UI on Vercel |
+| LLM SDKs | `langchain-anthropic`, `langchain-openai` / OpenRouter (behind the `LLMClient` interface) |
+| Slack integration | Bot token via `requests` + `chat.postMessage` (threaded replies) |
 | Ticket generation | Local mock only — no external SDK; simple ID generator (counter or `uuid4`) |
 | State schema | `pydantic` models |
+| Hosting | Local Streamlit; hosted demo on Vercel via FastAPI (`main.py`) |
 
 ## 9. Security / Config
 
-- Secrets (LLM API key, Slack webhook URL/bot token) are supplied via `.env` (local) or Streamlit session input — never hardcoded. No Jira credentials are needed since ticketing is mocked.
+- Secrets (LLM API key, Slack bot token / channel ID) are supplied via `.env` (local), Streamlit session input, or Vercel project env — never hardcoded. No Jira credentials are needed since ticketing is mocked.
 - A `.env.example` file is committed with placeholder keys documenting what's required; the real `.env` is gitignored.
 - No secret values are ever written to logs or included in the UI trace output.
+- Demo URL: https://hackathon-sep-5.vercel.app
 
 ## 10. Demo Fixtures
 

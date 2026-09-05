@@ -34,6 +34,8 @@ uvicorn main:app --reload
 # Set OPENROUTER_API_KEY, SLACK_BOT_TOKEN, and SLACK_CHANNEL_ID in project env
 ```
 
+Live demo: https://hackathon-sep-5.vercel.app
+
 ## Test it
 
 ```bash

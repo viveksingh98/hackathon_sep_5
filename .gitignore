@@ -12,6 +12,8 @@ venv/
 # Node / Vercel CLI (local only)
 node_modules/
 package-lock.json
+package.json
+fixtures.zip
 
 # Regenerable design-canvas build output (source is design/*.dc.html + canvas.json)
 design/devops-incident-suite-landing-hero.html

@@ -6,7 +6,9 @@ Implementation-level companion to [requirements.md](requirements.md) and [archit
 
 ```
 hackathon_sep_5/
-├── app.py                     # Streamlit entrypoint (landing + upload + live trace + report)
+├── streamlit_app.py           # Local Streamlit entrypoint (landing + upload + live trace + report)
+├── main.py                    # FastAPI entrypoint for Vercel (same agents, thin HTML UI)
+├── web_assets.py              # Embedded HTML + fixture payloads for the Vercel bundle
 ├── graph/
 │   ├── __init__.py
 │   ├── state.py                # IncidentState + all pydantic models
@@ -20,16 +22,21 @@ hackathon_sep_5/
 ├── llm/
 │   ├── __init__.py
 │   ├── client.py                 # LLMClient protocol
+│   ├── factory.py                # Provider factory (openrouter / anthropic / openai)
 │   ├── anthropic_client.py
-│   └── openai_client.py
+│   ├── openai_client.py
+│   └── openrouter_client.py
 ├── integrations/
-│   └── slack.py                  # Slack webhook/chat.postMessage wrapper
+│   └── slack.py                  # Slack chat.postMessage wrapper (+ NoOp helper for tests)
 ├── knowledge/
 │   └── runbook.json               # Static category -> known-fix lookup
 ├── fixtures/
 │   ├── sample_oom.json
 │   ├── sample_db_timeout.json
-│   └── sample_mixed_severity.json
+│   ├── sample_mixed_severity.json
+│   └── sample_ops_incident.json
+├── templates/
+│   └── index.html                 # Source HTML for the FastAPI UI (also embedded in web_assets.py)
 ├── tests/
 │   ├── test_log_reader.py
 │   ├── test_remediation.py
@@ -41,6 +48,8 @@ hackathon_sep_5/
 │   ├── requirements.md
 │   ├── architecture.md
 │   └── technical-specification.md   # this file
+├── pyproject.toml                 # Vercel FastAPI entrypoint + runtime deps
+├── vercel.json
 ├── .env.example
 └── requirements.txt
 ```
@@ -192,37 +201,47 @@ class LLMClient(Protocol):
     def recommend(self, incident: Incident, runbook_entry: dict | None) -> Remediation: ...
 ```
 
-`AnthropicClient` and `OpenAIClient` in `llm/anthropic_client.py` / `llm/openai_client.py` implement this protocol using each SDK's structured-output / tool-calling mode (`langchain-anthropic`'s `with_structured_output(Incident)` equivalent) so `classify`/`recommend` always return parsed pydantic objects, never raw text the caller has to parse. The Streamlit sidebar constructs whichever adapter matches the user's provider + key selection and passes it into `build_graph()`.
+`AnthropicClient`, `OpenAIClient`, and `OpenRouterClient` in `llm/` implement this protocol using each SDK's structured-output / tool-calling mode so `classify`/`recommend` always return parsed pydantic objects, never raw text the caller has to parse. The Streamlit sidebar (and the FastAPI entrypoint) construct whichever adapter matches the user's provider + key selection and pass it into `build_graph()`.
 
 ## 6. Slack Integration (`integrations/slack.py`)
 
 - Requires a **bot token** (`SLACK_BOT_TOKEN`), not just a webhook URL, because threaded replies need the parent message's `ts`, which `chat.postMessage` returns and Incoming Webhooks do not. `architecture.md` mentions both options; this spec settles on the bot-token path since threading is a hard requirement (`requirements.md` §5.5).
 - Two calls: `chat.postMessage(channel, blocks=summary_blocks)` → capture `ts`; then one `chat.postMessage(channel, thread_ts=ts, text=...)` per critical incident.
-- Wrapped in `try/except requests.RequestException` (or the Slack SDK's own exception type); on failure, returns a `NotificationResult(error=...)` rather than raising, so the orchestrator's error-handling contract (§7 of `architecture.md`) holds.
+- Wrapped in `try/except`; on failure, returns a `NotificationResult(error=...)` rather than raising, so the orchestrator's error-handling contract (§7 of `architecture.md`) holds.
+- Slack credentials are **required** to run Analyze in both UIs (bot must be invited to the target channel).
 
-## 7. Streamlit App Structure (`app.py`)
+## 7. UI Entrypoints
+
+### 7.1 Streamlit (`streamlit_app.py`) — local demo
 
 | Section | Content |
 |---|---|
-| Hero / header | Static header banner using the visual language from the [landing hero design](https://claude.ai/code/artifact/57c38970-f20d-4170-b51f-06161760dc53) (dark warm-aurora aesthetic, product wordmark) — simplified/static (no live CSS animation) since it's rendered inside Streamlit, not a standalone HTML page. |
-| Sidebar | LLM provider select (`Anthropic` / `OpenAI`) + API key input (`st.text_input(..., type="password")`, session-only); Slack bot token input. |
-| Main — upload | `st.file_uploader` for a JSON log file, plus buttons to load one of the three bundled `fixtures/*.json` sample logs. |
-| Main — live trace | On submit, calls `graph.stream(initial_state, stream_mode=["updates","custom"])` synchronously; one `st.status(...)` block per node (`log_reader`, `remediation`, `ticket`, `cookbook`, `notification`), each updated to "running" → "done"/"error" as its chunk arrives, with a one-line hand-off caption between them per `architecture.md` §6. |
-| Main — final report | Renders `cookbook` as Markdown, a table of `tickets` (mock id + link), and the `notification_result` status. |
+| Hero / header | Static header banner (dark warm-aurora aesthetic, product wordmark). |
+| Sidebar | LLM provider select (`OpenRouter` / `Anthropic` / `OpenAI`) + API key; Slack bot token + channel ID. |
+| Main — upload | `st.file_uploader` for a JSON log file, plus buttons to load bundled `fixtures/*.json` sample logs. |
+| Main — live trace | On submit, calls `graph.stream(..., stream_mode="updates")`; one `st.status(...)` block per node with hand-off captions. |
+| Main — final report | Renders `cookbook` as Markdown, mock tickets, and `notification_result` status. |
+
+### 7.2 FastAPI (`main.py`) — Vercel / hosted demo
+
+Streamlit needs a persistent server, so production hosting uses FastAPI + a thin HTML form that calls the same `build_graph()` pipeline. Sample fixtures and the page template are embedded in `web_assets.py` so they survive the Vercel Python bundle. Live demo: https://hackathon-sep-5.vercel.app
 
 ## 8. Configuration (`.env.example`)
 
 ```bash
-# Choose one at runtime in the sidebar; both may be set so either is available
+# LLM — pick one provider at runtime (OpenRouter preferred for demo)
+OPENROUTER_API_KEY=
+OPENROUTER_MODEL=openai/gpt-4o-mini
+
 ANTHROPIC_API_KEY=
 OPENAI_API_KEY=
 
-# Slack (bot token — required for threaded replies, see §6)
+# Slack — required (invite the bot to the channel first)
 SLACK_BOT_TOKEN=
 SLACK_CHANNEL_ID=
 ```
 
-No Jira variables — ticketing is mocked (see §4.3).
+No Jira variables — ticketing is mocked (see §4.3). Strip whitespace from env values before use (Windows CRLF can corrupt `OPENROUTER_MODEL`).
 
 ## 9. Dependencies (`requirements.txt`)
 
@@ -232,33 +251,49 @@ langgraph
 langchain-anthropic
 langchain-openai
 pydantic
-slack_sdk
+requests
 python-dotenv
+pytest
+fastapi
+jinja2
+python-multipart
+uvicorn
 ```
 
 ## 10. Testing Plan
 
 - **Per-node unit tests** (`tests/test_*.py`): each node function called directly with a hand-built `IncidentState`, LLM calls mocked (return a fixed `Incident`/`Remediation`) so tests are deterministic and don't burn API credits. `test_ticket.py` and `test_cookbook.py` need no LLM mock since those nodes make no LLM calls.
 - **`test_graph_end_to_end.py`**: runs `build_graph()` with a fake `LLMClient` and a fake Slack client against `fixtures/sample_mixed_severity.json` (which contains both critical and non-critical incidents), asserting: tickets exist only for critical incidents, the cookbook contains every incident, and a Slack failure (fake client raises) still leaves `cookbook` populated in the final state.
-- No live-API integration tests are part of the 1-day scope; provider/Slack correctness is verified manually during the demo rehearsal instead.
+- No live-API integration tests are part of the 1-day scope; provider/Slack correctness is verified manually during the demo rehearsal instead (local Streamlit and/or the Vercel URL).
 
 ## 11. Demo Fixtures
 
-Three files under `fixtures/`, per `architecture.md` §10:
+Files under `fixtures/`, per `architecture.md` §10:
 - `sample_oom.json` — single critical OOM incident (exercises the mock-ticket + Slack-thread path).
 - `sample_db_timeout.json` — single high-severity DB timeout incident (exercises the no-ticket path).
 - `sample_mixed_severity.json` — combination of the above plus a low-severity noise event, for the primary live demo run and for the end-to-end test.
+- `sample_ops_incident.json` — additional mixed ops sample for walkthroughs.
 
 ## 12. Run Instructions
+
+Local Streamlit:
 
 ```bash
 pip install -r requirements.txt
 cp .env.example .env   # fill in keys
-streamlit run app.py
+streamlit run streamlit_app.py
+```
+
+Hosted FastAPI / Vercel:
+
+```bash
+uvicorn main:app --reload
+# or deploy with Vercel; set OPENROUTER_API_KEY, OPENROUTER_MODEL,
+# SLACK_BOT_TOKEN, and SLACK_CHANNEL_ID in project env
 ```
 
 ## 13. Open Risks / Follow-ups
 
 - Threaded Slack replies require a bot token with `chat:write` scope in the target workspace; confirm this is provisioned before the demo (an Incoming-Webhook-only workspace cannot thread — see §6).
 - LLM structured-output reliability (`classify`/`recommend` returning valid pydantic objects on the first try) should be spot-checked against the real fixture logs before the demo, since a malformed response is the most likely single point of failure in a live run.
-- The landing hero design uses `git clone && streamlit run app.py` as its install caption — update it once the repo has a real public URL/name.
+- Hosted demo URL: https://hackathon-sep-5.vercel.app — keep env vars in sync when rotating keys.
