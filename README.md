@@ -15,10 +15,16 @@ cp .env.example .env   # fill in your keys, or paste them into the sidebar at ru
 streamlit run app.py
 ```
 
-`app.py` loads `.env` on startup, so `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`,
-`SLACK_BOT_TOKEN`, and `SLACK_CHANNEL_ID` pre-fill the sidebar fields. Anything
-you type in the sidebar overrides them for that session; nothing is written back
-to disk.
+`app.py` loads `.env` on startup, so `OPENROUTER_API_KEY` (preferred for demo),
+`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, and optional `SLACK_BOT_TOKEN` /
+`SLACK_CHANNEL_ID` pre-fill the sidebar fields. Anything you type in the sidebar
+overrides them for that session; nothing is written back to disk.
+
+Slack is optional — leave those fields blank to run classification, remediation,
+mock tickets, and the cookbook without posting.
+
+For a hosted demo, use a Streamlit-compatible host (e.g. Streamlit Community
+Cloud, Render, or Railway). Vercel does not run Streamlit as-is.
 
 ## Test it
 

@@ -31,3 +31,10 @@ class SlackClient:
         if not data.get("ok"):
             raise SlackError(data.get("error", "unknown_slack_error"))
         return data["ts"]
+
+
+class NoOpSlackClient:
+    """Used when Slack credentials are omitted so the rest of the pipeline can still run."""
+
+    def post_message(self, text: str, blocks: Optional[list] = None, thread_ts: Optional[str] = None) -> str:
+        return "slack-skipped"

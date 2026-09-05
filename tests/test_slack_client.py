@@ -1,6 +1,6 @@
 import pytest
 
-from integrations.slack import SlackClient, SlackError
+from integrations.slack import NoOpSlackClient, SlackClient, SlackError
 
 
 class _FakeResponse:
@@ -41,3 +41,8 @@ def test_post_message_raises_slack_error_on_api_failure(monkeypatch):
 
     with pytest.raises(SlackError, match="channel_not_found"):
         client.post_message(text="hello")
+
+
+def test_noop_slack_client_returns_skipped_marker():
+    client = NoOpSlackClient()
+    assert client.post_message(text="hello", blocks=[]) == "slack-skipped"
