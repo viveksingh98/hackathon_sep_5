@@ -51,3 +51,34 @@ def test_log_reader_records_error_on_classify_failure():
 
     assert result["errors"][0].node == "log_reader"
     assert "model unavailable" in result["errors"][0].message
+
+
+def test_log_reader_handles_empty_log():
+    raw_log = ""
+    client = FakeLLMClient(classify_result=[])
+    state = IncidentState(raw_log=raw_log)
+
+    node = log_reader.run(client)
+    result = node(state)
+
+    assert len(result["parsed_events"]) == 0
+    assert len(result["incidents"]) == 0
+    assert len(result["errors"]) == 0
+
+
+def test_log_reader_handles_all_invalid_json_log():
+    raw_log = "\n".join([
+        "not json",
+        "also not json",
+        "still not json",
+    ])
+    client = FakeLLMClient(classify_result=[])
+    state = IncidentState(raw_log=raw_log)
+
+    node = log_reader.run(client)
+    result = node(state)
+
+    assert len(result["parsed_events"]) == 0
+    assert len(result["incidents"]) == 0
+    assert len(result["errors"]) == 1
+    assert "Dropped 3 unparseable log line(s)" in result["errors"][0].message

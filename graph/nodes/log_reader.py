@@ -6,10 +6,15 @@ from graph.state import AgentError, IncidentState, LogEvent
 
 def run(llm_client) -> Callable[[IncidentState], dict]:
     def _node(state: IncidentState) -> dict:
-        events, dropped = _parse_log(state.raw_log)
         errors = list(state.errors)
-        if dropped:
-            errors.append(AgentError(node="log_reader", message=f"Dropped {dropped} unparseable log line(s)"))
+
+        try:
+            events, dropped = _parse_log(state.raw_log)
+            if dropped:
+                errors.append(AgentError(node="log_reader", message=f"Dropped {dropped} unparseable log line(s)"))
+        except Exception as exc:  # noqa: BLE001 - node boundary must not raise
+            errors.append(AgentError(node="log_reader", message=str(exc)))
+            return {"parsed_events": [], "incidents": [], "errors": errors}
 
         try:
             incidents = llm_client.classify(events)
