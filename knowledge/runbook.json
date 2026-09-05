@@ -1,0 +1,56 @@
+{
+  "oom": {
+    "fix_steps": [
+      "Increase the container memory limit",
+      "Check for a memory leak introduced in the last deploy",
+      "Add a memory-usage alert at 80% of the limit"
+    ],
+    "risk": "low",
+    "effort": "low"
+  },
+  "db_timeout": {
+    "fix_steps": [
+      "Check the database connection pool size against current load",
+      "Verify the database instance is not under CPU/IO pressure",
+      "Add a circuit breaker around the affected query path"
+    ],
+    "risk": "medium",
+    "effort": "medium"
+  },
+  "disk_full": {
+    "fix_steps": [
+      "Clear old log files or rotate logs more aggressively",
+      "Increase the volume size",
+      "Add a disk-usage alert at 85%"
+    ],
+    "risk": "low",
+    "effort": "low"
+  },
+  "deploy_failure": {
+    "fix_steps": [
+      "Roll back to the last known-good deploy",
+      "Check the failed deploy's build/test logs for the root cause",
+      "Re-run the deploy once the underlying issue is fixed"
+    ],
+    "risk": "medium",
+    "effort": "low"
+  },
+  "latency_spike": {
+    "fix_steps": [
+      "Check for a recent traffic spike or a slow downstream dependency",
+      "Review recent deploys to the affected service",
+      "Scale out the affected service if load-related"
+    ],
+    "risk": "medium",
+    "effort": "medium"
+  },
+  "auth_failure": {
+    "fix_steps": [
+      "Check for an expired credential, certificate, or API key",
+      "Verify the identity provider/auth service is healthy",
+      "Rotate the affected credential if compromised"
+    ],
+    "risk": "high",
+    "effort": "medium"
+  }
+}
