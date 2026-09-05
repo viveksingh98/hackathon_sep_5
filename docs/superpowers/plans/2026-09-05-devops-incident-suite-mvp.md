@@ -1970,3 +1970,7 @@ git commit -m "feat: add Streamlit app and README"
 - [ ] Run the full test suite: `pytest -v` — expect all tests from Tasks 1–11 passing (roughly 30 tests).
 - [ ] Run `streamlit run app.py`, select the `sample_mixed_severity.json` fixture, enter a real (or dummy, to confirm the error path) API key and Slack bot token, click Analyze, and confirm: the live trace shows all five agents completing, the final report shows one mock ticket, and the cookbook lists both the critical and high-severity incidents.
 - [ ] Cross-check against `requirements.md` §7 (Success Criteria / Demo Script) that every listed step is reachable in the running app.
+
+## Known Plan Gaps (found by final whole-branch review, not fixed in this plan)
+
+- **Cookbook de-duplication (Task 6) was never actually specified in this plan's code.** `technical-specification.md` §4.4 describes de-duplicating the cookbook by category (grouping incidents that share a category under one heading), but Task 6's sample code above only groups by severity and lists every incident individually — it does not de-duplicate by category at all. The implementation (correctly) followed this plan's code, not the technical spec's prose. Not a demo blocker with the shipped fixtures (no two incidents share a category), but a real log with repeated incident categories will show the same fix block multiple times instead of once. Fix in a follow-up: group `cookbook.py`'s severity buckets further by `incident.category` before rendering.
