@@ -1,4 +1,4 @@
-"""Vercel-compatible FastAPI entry (Streamlit stays in app.py for local runs)."""
+"""Vercel-compatible FastAPI entry (Streamlit stays in streamlit_app.py for local runs)."""
 
 from __future__ import annotations
 
@@ -6,27 +6,37 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request
+from fastapi import FastAPI, Form
 from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from jinja2 import Template
 
 from graph.build import build_graph
 from graph.state import IncidentState
 from integrations.slack import NoOpSlackClient, SlackClient
 from llm.factory import create_client
+from web_assets import FIXTURES, INDEX_HTML
 
 load_dotenv()
 
 _ROOT = Path(__file__).resolve().parent
 _FIXTURES_DIR = _ROOT / "fixtures"
-_TEMPLATES_DIR = _ROOT / "templates"
 
 app = FastAPI(title="DevOps Incident Analysis Suite")
-templates = Jinja2Templates(directory=str(_TEMPLATES_DIR))
+_PAGE = Template(INDEX_HTML)
 
 
 def _fixture_names() -> list[str]:
-    return sorted(p.name for p in _FIXTURES_DIR.glob("*.json"))
+    names = set(FIXTURES)
+    if _FIXTURES_DIR.is_dir():
+        names.update(p.name for p in _FIXTURES_DIR.glob("*.json"))
+    return sorted(names)
+
+
+def _load_fixture(name: str) -> str:
+    disk = _FIXTURES_DIR / name
+    if disk.is_file():
+        return disk.read_text(encoding="utf-8")
+    return FIXTURES[name]
 
 
 def _serialize_state(state: dict) -> dict:
@@ -95,24 +105,31 @@ def _run_analysis(raw_log: str, api_key: str, provider: str = "openrouter") -> d
     return _serialize_state(final_state)
 
 
+def _render(*, fixtures, has_env_key, selected_fixture, result, error) -> HTMLResponse:
+    return HTMLResponse(
+        _PAGE.render(
+            fixtures=fixtures,
+            has_env_key=has_env_key,
+            selected_fixture=selected_fixture,
+            result=result,
+            error=error,
+        )
+    )
+
+
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "fixtures": _fixture_names(),
-            "has_env_key": bool(os.getenv("OPENROUTER_API_KEY")),
-            "selected_fixture": "sample_mixed_severity.json",
-            "result": None,
-            "error": None,
-        },
+async def home():
+    return _render(
+        fixtures=_fixture_names(),
+        has_env_key=bool(os.getenv("OPENROUTER_API_KEY")),
+        selected_fixture="sample_mixed_severity.json",
+        result=None,
+        error=None,
     )
 
 
 @app.post("/analyze", response_class=HTMLResponse)
 async def analyze(
-    request: Request,
     fixture: str = Form("(upload my own)"),
     raw_log: str = Form(""),
     api_key: str = Form(""),
@@ -122,9 +139,9 @@ async def analyze(
     key = (api_key or os.getenv("OPENROUTER_API_KEY", "")).strip()
     log_text = raw_log.strip()
     if not log_text and fixture in _fixture_names():
-        log_text = (_FIXTURES_DIR / fixture).read_text(encoding="utf-8")
+        log_text = _load_fixture(fixture)
     if not key:
-        error = "OpenRouter API key required (sidebar field or OPENROUTER_API_KEY env)."
+        error = "OpenRouter API key required (form field or OPENROUTER_API_KEY env)."
     elif not log_text:
         error = "Select a sample log or paste JSON log content."
     else:
@@ -133,16 +150,12 @@ async def analyze(
         except Exception as exc:  # noqa: BLE001 - surface to UI for demo
             error = str(exc)
 
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "fixtures": _fixture_names(),
-            "has_env_key": bool(os.getenv("OPENROUTER_API_KEY")),
-            "selected_fixture": fixture,
-            "result": result,
-            "error": error,
-        },
+    return _render(
+        fixtures=_fixture_names(),
+        has_env_key=bool(os.getenv("OPENROUTER_API_KEY")),
+        selected_fixture=fixture,
+        result=result,
+        error=error,
     )
 
 
