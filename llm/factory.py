@@ -11,6 +11,6 @@ def create_client(provider: str, api_key: str):
     if provider == "openai":
         return OpenAIClient(api_key=api_key)
     if provider == "openrouter":
-        model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini")
+        model = os.getenv("OPENROUTER_MODEL", "openai/gpt-4o-mini").strip()
         return OpenRouterClient(api_key=api_key, model=model)
     raise ValueError(f"Unknown LLM provider: {provider}")
