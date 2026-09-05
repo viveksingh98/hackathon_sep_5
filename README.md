@@ -12,10 +12,10 @@ and [docs/technical-specification.md](docs/technical-specification.md) for the f
 ```bash
 pip install -r requirements.txt
 cp .env.example .env   # fill in your keys, or paste them into the sidebar at runtime
-streamlit run app.py
+streamlit run streamlit_app.py
 ```
 
-`app.py` loads `.env` on startup, so `OPENROUTER_API_KEY` (preferred for demo),
+`streamlit_app.py` loads `.env` on startup, so `OPENROUTER_API_KEY` (preferred for demo),
 `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, and optional `SLACK_BOT_TOKEN` /
 `SLACK_CHANNEL_ID` pre-fill the sidebar fields. Anything you type in the sidebar
 overrides them for that session; nothing is written back to disk.
@@ -31,7 +31,7 @@ Streamlit needs a persistent server, so Vercel hosting uses a thin FastAPI UI in
 ```bash
 pip install -r requirements.txt
 uvicorn main:app --reload
-# or: vercel --prod   # after `vercel login`, set OPENROUTER_API_KEY in project env
+# or: vercel --prod   # after login / VERCEL_TOKEN, with OPENROUTER_API_KEY in project env
 ```
 
 ## Test it
